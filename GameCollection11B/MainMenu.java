@@ -1,10 +1,11 @@
 public class MainMenu extends View implements ActionListener {
    
-   ArrayList<GameCard> gameCards;
-   Schaltflaeche left;
-   Schaltflaeche right;
-   Rectangle background;
-   int currentGame;
+   private ArrayList<GameCard> gameCards;
+   private Schaltflaeche left;
+   private Schaltflaeche right;
+   private Rectangle background;
+   private int currentGame;
+   private Text title;
 
    public MainMenu() {
       super(null);
@@ -37,6 +38,10 @@ public class MainMenu extends View implements ActionListener {
       this.add(left, right);
       left.sendToBack();
       right.sendToBack();
+
+      title = new Text(400, 40, 64, "Spieleauswahl");
+      title.setAlignment(Alignment.center);
+      add(title);
    }
    
    void onKeyTyped(String key) {
@@ -96,48 +101,54 @@ public class GameCard extends GroupWithUtilities implements ActionListener, Anim
    private RoundedRectangle frame;
 
    private double SCALE = 2.0 / 3.0;
-   private double WIDTH = 300;
-   private double HEIGHT = 400;
+   private double UNIT = 8;
+   private double WIDTH = 30 * UNIT;
+   private double HEIGHT = 40 * UNIT;
 
    private int DURATION = 500;
    private double scale = 1;
    private double luminance = 100;
    private Animation[] runningAnimations = new Animation[4];
+   private double y;
    
    private GameDescription game;
 
-   public GameCard(double x, double y, double w, double h, String name, GameDescription game, int fontsize, double borderradius, ActionListener listener) {
+   public GameCard(double y, double w, double h, String name, GameDescription game, int fontsize, double borderradius, ActionListener listener) {
       setVisible(false);
       
       this.listener = listener;
+      fontsize = (int)(fontsize * (UNIT / 10));
       this.fontsize = fontsize;
       this.game = game;
+      double x = 0;
+      this.y = y;
+      println(y);
 
-      frame = new RoundedRectangle(x, y, w, h, borderradius);
+      frame = new RoundedRectangle(x, 0, w, h, borderradius);
       frame.setFillColor(new Color(65, 65, 65));
       // frame.setBorderColor(Theming.foreground);
       // frame.setBorderWidth(0);
       add(frame);
       
-      titleDisplay = new Text(x + w / 2, y + 10, fontsize, game.getName(), "Candara");
+      titleDisplay = new Text(x + w / 2, 0 + 1 * UNIT, fontsize * 1.1, game.getName(), "Candara");
       titleDisplay.setAlignment(Alignment.center);
       titleDisplay.setFillColor(Theming.foreground);
       add(titleDisplay);
 
-      RoundedRectangle imageFrame = new RoundedRectangle(x + 20, y + fontsize + 40, w - 40, h / 2, 10);
+      RoundedRectangle imageFrame = new RoundedRectangle(x + 2 * UNIT, 0 + fontsize + 4 * UNIT, w - 4 * UNIT, h / 2, 1 * UNIT);
       imageFrame.setFillColor(new Color(43, 43, 43));
       add(imageFrame);
 
-      Group image = game.copyImage(x + 30 + (w - 40 - h / 2) / 2, y + fontsize + 50, h / 2 - 20);
+      Group image = game.copyImage(x + 3 * UNIT + (w - 4 * UNIT - h / 2) / 2, 0 + fontsize + 5 * UNIT, h / 2 - 2 * UNIT);
       add(image);
 
-      playButton = new Schaltflaeche(x + 20, y + fontsize + 60 + h / 2, w - 40, h * 0.2, 10, name, "Spielen", 32, this);
+      playButton = new Schaltflaeche(x + 2 * UNIT, 0 + fontsize + 6 * UNIT + h / 2, w - 4 * UNIT, h * 0.2, 1 * UNIT, name, "Spielen", 32, this);
       playButton.setFillColor(Theming.foreground);
       playButton.setTextColor(Theming.background);
       add(playButton);
 
       defineCenter(WIDTH / 2, HEIGHT / 2);
-      moveTo(getWorld().getWidth() / 2, getWorld().getHeight() / 2);
+      moveTo(getWorld().getWidth() / 2, y);
       
       setState(0, false);
    }
@@ -150,17 +161,17 @@ public class GameCard extends GroupWithUtilities implements ActionListener, Anim
             break;
          case -1 : 
             if(this.state == -2) goOutsideView(true, false);
-            animate(getWorld().getWidth() / 2 - WIDTH / 2 - SCALE * WIDTH / 2 - 100, getWorld().getHeight() / 2, SCALE, 50, animated);
+            animate(getWorld().getWidth() / 2 - WIDTH / 2 - SCALE * WIDTH / 2 - 100, y, SCALE, 50, animated);
             break;
          case 0 : 
             if(this.state != 0) {
-               animate(getWorld().getWidth() / 2, getWorld().getHeight() / 2, 1, 100, animated);
+               animate(getWorld().getWidth() / 2, y, 1, 100, animated);
             }
             break;
             
          case 1 : 
             if(this.state == -2) goOutsideView(false, false);
-            animate(getWorld().getWidth() / 2 + WIDTH / 2 + SCALE * WIDTH / 2 + 100, getWorld().getHeight() / 2, SCALE, 50, animated);
+            animate(getWorld().getWidth() / 2 + WIDTH / 2 + SCALE * WIDTH / 2 + 100, y, SCALE, 50, animated);
             break;
 
          default : 
@@ -173,8 +184,8 @@ public class GameCard extends GroupWithUtilities implements ActionListener, Anim
    }
    
    public void goOutsideView(boolean left, boolean animated) {
-      if(left) animate(- SCALE * SCALE * WIDTH / 2 - 50, getWorld().getHeight() / 2, SCALE * SCALE, 20, animated);
-      else animate(getWorld().getWidth() + SCALE * SCALE * WIDTH + 50, getWorld().getHeight() / 2, SCALE * SCALE, 20, animated);
+      if(left) animate(- SCALE * SCALE * WIDTH / 2 - 50, y, SCALE * SCALE, 20, animated);
+      else animate(getWorld().getWidth() + SCALE * SCALE * WIDTH + 50, y, SCALE * SCALE, 20, animated);
    }
    
    public void animate(double xTo, double yTo, double scaleTo_, double luminanceTo, boolean animated) {
@@ -195,7 +206,7 @@ public class GameCard extends GroupWithUtilities implements ActionListener, Anim
    }
 
    public GameCard(String name, GameDescription game, ActionListener listener) {
-      GameCard(0, 0, WIDTH, HEIGHT, name, game, 40, 10, listener);
+      GameCard(getWorld().getHeight() / 2, WIDTH, HEIGHT, name, game, 40, 10, listener);
    }
    
    
