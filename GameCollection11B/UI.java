@@ -10,7 +10,7 @@ public interface ActionObject {
    
 }
 
-public interface Enabelable extends Hierachial {
+public interface Enabelable {
    
    public void setEnabled(boolean enabled);
    
@@ -21,7 +21,7 @@ public interface Enabelable extends Hierachial {
 }
 
 /** A Button with a text, that can be pressed */
-public class Schaltflaeche extends Group implements ActionObject, Enabelable, Hierachial {
+public class Schaltflaeche extends Group implements ActionObject, Enabelable {
 
    /** The text display */
    private Text text;
@@ -41,9 +41,7 @@ public class Schaltflaeche extends Group implements ActionObject, Enabelable, Hi
    private boolean hovered;
    /** True while fiering an action, to prevent double clicks */
    private boolean fieringAction;
-   
-   private GroupWithUtilities parent;
-   
+      
    private String name;
 
    public Schaltflaeche(double x, double y, double w, double h, double r, String name, String text, double fontsize, ActionListener actionlistener) {
@@ -152,7 +150,8 @@ public class Schaltflaeche extends Group implements ActionObject, Enabelable, Hi
   	}
    
    public boolean getEnabled() {
-      return enabled && (parent == null || parent.getEnabled());
+      if (getParentGroup() instanceof Enabelable && ! ((Enabelable) getParentGroup()).getEnabled()) return false;
+      return enabled;
    }
    
    public void setColorTheme(ColorTheme colorTheme) {
@@ -168,14 +167,6 @@ public class Schaltflaeche extends Group implements ActionObject, Enabelable, Hi
       }
    }
    
-  	public void setParent(GroupWithUtilities parent) {
-     	this.parent = parent;
-  	}
-
-  	public GroupWithUtilities getParent() {
-     	return parent;
-  	}
-
 }
 
 public enum ColorTheme {
@@ -336,11 +327,6 @@ public class Menue extends CloseableView implements ActionListener {
    
 }
 
-public interface Hierachial {
-   public void setParent(GroupWithUtilities parent);
-   public GroupWithUtilities getParent();
-}
-
 public class GroupWithUtilities extends Group implements Enabelable {
    
    private boolean enabled = true;
@@ -349,16 +335,6 @@ public class GroupWithUtilities extends Group implements Enabelable {
    
    public GroupWithUtilities() {
       super();
-   }
-   
-   public void destroyAll() {
-      
-      // // stopActing();
-      // for (int i = 0; i < size(); i++) {
-      //    get(i).destroy();
-      // }
-      destroy();
-      
    }
    
    public void setVisible(boolean visible) {
@@ -388,24 +364,6 @@ public class GroupWithUtilities extends Group implements Enabelable {
    
   	public boolean getEnabled() {
       return enabled && (parent == null || parent.getEnabled());
-  	}
-
-  	public void setParent(GroupWithUtilities parent) {
-    		this.parent = parent;
-  	}
-     
-   public void add(Shape ... shapes) {
-      for (int i = 0; i < shapes.length; i++) {
-         if(shapes[i] instanceof GameView) {
-            println("hello");
-         }
-         if((shapes[i] instanceof Hierachial) || (shapes[i] instanceof Enabelable))((Hierachial) shapes[i]).setParent(this);
-         super.add(shapes[i]);
-      }
-   }
-
-  	public GroupWithUtilities getParent() {
-    		return parent;
   	}
      
 }
@@ -491,9 +449,7 @@ public class View extends GroupWithUtilities implements Animatable, Runnable {
       built = false;
       overlay = new Rectangle(0, 0, 800, 600);
       overlay.setFillColor(0, 1);
-      // add(overlay);
-      // overlay.bringToFront();
-      // add(overlay); // leads to error in web console when calling destroy(); // ToDo: report to Pabst
+      add(overlay);
       built = true;
    }
    
@@ -513,6 +469,7 @@ public class View extends GroupWithUtilities implements Animatable, Runnable {
    
    public void show(boolean animated) {
       removeRunningAnimations();
+      if(getParentGroup() instanceof HiddenGroup) getParentGroup().remove(this);
       runningAnimations.add(new Animation(this, "visibility", 1, animated ? DURATION : 0));
       bringToFront();
    }
@@ -564,7 +521,7 @@ public class View extends GroupWithUtilities implements Animatable, Runnable {
       if(transistTo_ != null) transistTo_.show(true);
       if(destroyAfterTransition) {
          removeRunningAnimations(); 
-        	destroyAll();
+        	destroy();
       }
   	}
      
@@ -578,7 +535,7 @@ public class View extends GroupWithUtilities implements Animatable, Runnable {
       else {
          if(destroyAfterTransition) {
             removeRunningAnimations();
-            destroyAll();
+            destroy();
          }
          if(transistTo_ != null) transistTo_.show(false);
       }
