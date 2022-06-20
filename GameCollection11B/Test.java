@@ -17,10 +17,7 @@ public class BallGame extends Game {
    public void act() {
       ball.move(-2, -2);
       if(ball.isOutsideView()) {
-         destroy();
-         println("hilfe");
-         // return_(true, true);
-         stopActing();
+         return_(true, true);
       }
    }
 
