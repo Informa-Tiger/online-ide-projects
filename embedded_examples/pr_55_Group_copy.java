@@ -5,4 +5,4 @@ defaultGroup.getWorld().setDefaultGroup(defaultGroup);
 Group copy = g.copy();
 g.destroy();
 copy.destroy();
-println(defaultGroup.get(0).getCenterX());
+println(defaultGroup.size());
